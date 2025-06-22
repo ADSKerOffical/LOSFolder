@@ -1,5 +1,6 @@
 -- Wally West Be like 
-local WallyWestScript = Instance.new("IntValue")
+if not game.Players.LocalPlayer:FindFirstChild("WallyWestScript") then
+local WallyWestScript = Instance.new("IntValue", game.Players.LocalPlayer)
 WallyWestScript.Name = "WallyWestScript"
 
 local Scren = Instance.new("ScreenGui", game.CoreGui)
@@ -17,6 +18,61 @@ Button.Parent = Scren
 
 local RGBColor = Instance.new("UIGradient", Button)
 RGBColor.Color = ColorSequence.new(Color3.new(1, 0, 0), Color3.new(1, 0.5, 0), Color3.new(1, 1, 0), Color3.new(0, 1, 0), Color3.new(0, 1, 1), Color3.new(0, 0, 1), Color3.new(1, 0, 1))
+
+local Button3 = Button:Clone()
+Button3.Parent = Scren
+Button3.Position = UDim2.new(0.79, 0, 0.5, 0)
+Button3.Text = "Teleport to the road"
+Button3.UIGradient.Color = ColorSequence.new(Color3.new(0, 1, 0), Color3.new(0, 0.5, 0), Color3.new(0, 0, 0))
+
+Button3.MouseButton1Click:Connect(function()
+  game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0, 10010, 0)
+end)
+
+local function getSPS()
+  if Workspace:FindFirstChild(game.Players.LocalPlayer.Name) and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+    return game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity.Magnitude
+  end
+  return 0
+end
+
+local road = Instance.new("Folder", Workspace)
+road.Name = "RoadFolder"
+
+for i = 0, 200 do
+  local baseplate = Instance.new("Part", road)
+  baseplate.Anchored = true
+  baseplate.Name = "Path"
+  baseplate.Color = Color3.new(0, 0.6, 0)
+  baseplate.Material = "Grass"
+  baseplate.Size = Vector3.new(2048, 8, 2048) -- max part size is 2048
+  baseplate.Position = Vector3.new(0, 10000, -(2048 * i))
+  
+  local lateral = baseplate:Clone()
+  lateral.Size = Vector3.new(10, 125, 2048)
+  lateral.CustomPhysicalProperties = PhysicalProperties.new(1, 0.3, 0.5, 1, 1)
+  lateral.Position = Vector3.new(1024, 10008, -(2048 * i))
+  lateral.Name = "Lateral"
+  lateral.Parent = road
+  
+  local lateral2 = lateral:Clone()
+  lateral2.Position = Vector3.new(-1024, 10008, -(2048 * i))
+  lateral2.Parent = road
+end
+
+local sps = Instance.new("TextLabel", Scren)
+sps.Position = UDim2.new(0.45, 0, 0.8, 0)
+sps.TextScaled = false
+sps.Size = UDim2.new(0.1, 0, 0.05, 0)
+sps.BackgroundTransparency = 1  
+sps.TextColor3 = Color3.new(1, 1, 1)
+sps.TextSize *= 1.75
+sps.Text = "SPS: 0"
+sps.FontFace = Font.new("rbxasset://fonts/families/Merriweather.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+
+task.spawn(function() repeat task.wait()
+  sps.Text = "SPS: " .. tostring(string.format("%.0f", getSPS()))
+until not sps end)
 
 Button.MouseButton1Click:Connect(function()
   WallyWestScript:Destroy()
@@ -50,6 +106,7 @@ hue = game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
     for _, part in next, char:GetDescendants() do
       if part:IsA("BasePart") then
        part.CustomPhysicalProperties = PhysicalProperties.new(math.huge, 0, 0)
+       part.EnableFluidForces = false
        part.Massless = true
      end
    end
@@ -143,7 +200,7 @@ end
   colo.Enabled = false
   
    task.spawn(function() repeat task.wait()
-     Doo.Enabled = (char.HumanoidRootPart.Velocity.Magnitude >= 1000)
+     Doo.Enabled = (char:WaitForChild("HumanoidRootPart").Velocity.Magnitude >= 1000)
      if char.HumanoidRootPart.Velocity.Y >= 300 then
        char.HumanoidRootPart.Velocity += Vector3.new(0, -200, 0)
      end
@@ -257,6 +314,10 @@ end
           explosion.Color = Color3.new(0, 1, 1)
           game.Debris:AddItem(explosion, 4)
           
+          task.delay(0.075, function()
+            char.HumanoidRootPart.Velocity = char.HumanoidRootPart.Velocity.Unit * 100 + (2 * char.HumanoidRootPart.Velocity.Magnitude)
+          end)
+          
           local sound = Instance.new("Sound", Workspace)
           sound.SoundId = "rbxassetid://91191741418347"
           sound.Volume = 1
@@ -303,13 +364,15 @@ end
   
   char.Humanoid.FallingDown:Connect(function()
     char.Humanoid:ChangeState("GettingUp")
-    char.HumanoidRootPart.Velocity = Vector3.zero
+    --[[char.HumanoidRootPart.Velocity = Vector3.zero
     char.HumanoidRootPart.AssemblyAngularVelocity = Vector3.zero
-    char.HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+    char.HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero]]--
   end)
 end)
 firesignal(game.Players.LocalPlayer.CharacterAdded, game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait())
 
-WallyWestScript.Destroying:Connect(function()
-  hue:Disconnect()
-end)
+  WallyWestScript.Destroying:Connect(function()
+    hue:Disconnect()
+    road:Destroy()
+  end)
+end
