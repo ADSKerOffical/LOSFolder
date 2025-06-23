@@ -194,6 +194,16 @@ end
   Doo.Texture = "rbxassetid://257173628"
   Doo.Parent = char.HumanoidRootPart
   
+  local LD1 = Doo:Clone()
+  LD1.Parent = char:FindFirstChild("LeftFoot")
+  local LD2 = Doo:Clone()
+  LD2.Parent = char:FindFirstChild("RightFoot")
+  
+  Doo:GetPropertyChangedSignal("Enabled"):Connect(function()
+    LD1.Enabled = Doo.Enabled
+    LD2.Enabled = Doo.Enabled
+  end)
+  
   local colo = Instance.new("ColorCorrectionEffect", game.Lighting)
   colo.TintColor = Color3.new(0, 0.8, 0.8)
   colo.Saturation = 0
@@ -204,7 +214,7 @@ end
      if char.HumanoidRootPart.Velocity.Y >= 300 then
        char.HumanoidRootPart.Velocity += Vector3.new(0, -200, 0)
      end
-     if char.HumanoidRootPart.Velocity.Magnitude >= 9000 then
+     if char.HumanoidRootPart.Velocity.Magnitude >= 15000 then
        colo.Enabled = true
       else
        colo.Enabled = false
@@ -315,7 +325,7 @@ end
           game.Debris:AddItem(explosion, 4)
           
           task.delay(0.075, function()
-            char.HumanoidRootPart.Velocity = char.HumanoidRootPart.Velocity.Unit * 100 + (2 * char.HumanoidRootPart.Velocity.Magnitude)
+            char.HumanoidRootPart.Velocity = char.HumanoidRootPart.Velocity.Unit * (100 + 2 * char.HumanoidRootPart.Velocity.Magnitude)
           end)
           
           local sound = Instance.new("Sound", Workspace)
@@ -338,6 +348,15 @@ end
           tween:Play()
           MakeCameraShake(3, 15, "def")
         end)
+        
+        local Highlight = Instance.new("Highlight", char)
+        Highlight.Adornee = char
+        Highlight.FillTransparency = 0.875
+        Highlight.FillColor = Color3.new(0, 1, 1)
+        Highlight.OutlineColor = Color3.fromRGB(0, 250, 250)
+        Highlight.OutlineTransparency = 0.65
+        Highlight.DepthMode = "Occluded"
+        game.Debris:AddItem(Highlight, 10)
         
         accel.Value = true
         attribute.Value = 25000
