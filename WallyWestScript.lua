@@ -204,6 +204,13 @@ end
     LD2.Enabled = Doo.Enabled
   end)
   
+  local Platf = Instance.new("Part", Workspace)
+  Platf.Anchored = true
+  Platf.CanCollide = false
+  Platf.Position = Vector3.new(31, -9, 527)
+  Platf.Size = Vector3.new(10, 1, 10)
+  Platf.Transparency = 1
+  
   local colo = Instance.new("ColorCorrectionEffect", game.Lighting)
   colo.TintColor = Color3.new(0, 0.8, 0.8)
   colo.Saturation = 0
@@ -211,6 +218,9 @@ end
   
    task.spawn(function() repeat task.wait()
      Doo.Enabled = (char:WaitForChild("HumanoidRootPart").Velocity.Magnitude >= 1000)
+     Platf.CanCollide = (char.HumanoidRootPart.Velocity.Magnitude >= 450)
+     Platf.Position = Vector3.new(char.HumanoidRootPart.Position.X, -10, char.HumanoidRootPart.Position.Z)
+     
      if char.HumanoidRootPart.Velocity.Y >= 300 then
        char.HumanoidRootPart.Velocity += Vector3.new(0, -200, 0)
      end
@@ -233,6 +243,7 @@ end
    char.Humanoid.Died:Connect(function()
      ScreenGui:Destroy()
      colo:Destroy()
+     Platf:Destroy()
    end)
    
    local Button = Instance.new("TextButton", ScreenGui)
