@@ -394,9 +394,9 @@ end
   
   char.Humanoid.FallingDown:Connect(function()
     char.Humanoid:ChangeState("GettingUp")
-    --[[char.HumanoidRootPart.Velocity = Vector3.zero
+    char.HumanoidRootPart.Velocity = Vector3.zero
     char.HumanoidRootPart.AssemblyAngularVelocity = Vector3.zero
-    char.HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero]]--
+    char.HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero
   end)
 end)
 firesignal(game.Players.LocalPlayer.CharacterAdded, game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait())
