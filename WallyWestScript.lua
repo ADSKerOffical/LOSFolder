@@ -246,6 +246,21 @@ end
      Platf:Destroy()
    end)
    
+   for _, part in next, char:GetChildren() do
+     if part:IsA("BasePart") then
+       local particle = Instance.new("ParticleEmitter", part)
+       particle.Rate = 1000
+       particle.LockedToPart = true
+       particle.Texture = "rbxassetid://11745241946"
+       particle.Lifetime = NumberRange.new(0.375, 0.375) -- 0.2 0.2
+       particle.Size = NumberSequence.new(0.435, 0.435) -- 0.5 0.5
+       particle.ZOffset -= 1
+       particle.Speed = NumberRange.new(0, 0)
+       particle.LightEmission = 1 
+       particle.Color = ColorSequence.new(Color3.new(0.4, 0.4, 1), Color3.new(0.4, 0.4, 1)) -- 0.3
+     end
+   end
+   
    local Button = Instance.new("TextButton", ScreenGui)
    Button.Size = UDim2.new(0.04, 0.04, 0.04, 4)
    Button.Position = UDim2.new(0.76, 0, 0.6, 0)
