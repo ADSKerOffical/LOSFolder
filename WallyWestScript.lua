@@ -105,9 +105,12 @@ hue = game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
    repeat task.wait()
     for _, part in next, char:GetDescendants() do
       if part:IsA("BasePart") then
-       part.CustomPhysicalProperties = PhysicalProperties.new(math.huge, 0, 0)
+       part.CustomPhysicalProperties = PhysicalProperties.new(math.huge, 0, 0, 0, 0)
        part.EnableFluidForces = false
-       part.Massless = true
+        pcall(function()
+         sethiddenproperty(part, "Friction", -math.huge)
+        end)
+       part.Massless = false
      end
    end
   until not char
