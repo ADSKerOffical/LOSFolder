@@ -3,6 +3,21 @@ if not game.Players.LocalPlayer:FindFirstChild("WallyWestScript") then
 local WallyWestScript = Instance.new("IntValue", game.Players.LocalPlayer)
 WallyWestScript.Name = "WallyWestScript"
 
+local Settings = Instance.new("Folder", WallyWestScript)
+Settings.Name = "WallyWestScriptSettings"
+
+local SAS = Instance.new("BoolValue", Settings)
+SAS.Name = "StopAfterStun"
+SAS.Value = true
+
+local IR = Instance.new("BoolValue", Settings)
+IR.Name = "InstantRace"
+IR.Value = false
+
+local SCOA = Instance.new("BoolValue", Settings)
+SCOA.Name = "ShakeCharacterOnAcceleration"
+SCOA.Value = true
+
 local Scren = Instance.new("ScreenGui", game.CoreGui)
 Scren.ResetOnSpawn = false
 
@@ -34,6 +49,27 @@ local function getSPS()
     return game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity.Magnitude
   end
   return 0
+end
+
+local Ihe
+if game.PlaceId == 3101667897 or game.CreatorId == 4705120 then
+  Ihe = game.Players.LocalPlayer.currentMap:GetPropertyChangedSignal("Value"):Connect(function()
+  local mapname = string.split(game.Players.LocalPlayer.currentMap.Value, " ")
+  local realmapname = ""
+  if string.find(game.Players.LocalPlayer.currentMap.Value, "Race") and IR.Value == true then
+  
+   if string.find(game.Players.LocalPlayer.currentMap.Value, "Grass") then
+     realmapname = string.gsub(string.split(game.Players.LocalPlayer.currentMap.Value, " ")[1], "Grass", "Grassland")
+    else
+     realmapname = mapname[1]
+   end
+    repeat task.wait() until (game.Workspace.raceMaps:FindFirstChild(realmapname):FindFirstChild("finishPart") and game.Workspace.raceMaps:FindFirstChild(realmapname).finishPart.CanTouch == true)
+    
+    game:GetService("TweenService"):Create(game.Players.LocalPlayer.Character.HumanoidRootPart, TweenInfo.new(0.04, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, 0), {
+       CFrame = game.Workspace.raceMaps:FindFirstChild(realmapname).finishPart.CFrame
+    }):Play()
+  end
+ end)
 end
 
 local road = Instance.new("Folder", Workspace)
@@ -124,6 +160,19 @@ end)
    accel.Name = "IsAccelerated"
    accel.Value = false
    
+   accel:GetPropertyChangedSignal("Value"):Connect(function()
+     if accel.Value == true then
+       task.spawn(function() repeat task.wait()
+   if char.Humanoid:GetState() ~= "Running" and char.Humanoid:GetState() ~= "RunningNoPhysics" and char.Humanoid.MoveDirection.Magnitude <= 0 and SCOA.Value == true then
+      local pos = char.HumanoidRootPart.CFrame
+      char.HumanoidRootPart.CFrame *= CFrame.new(math.min(math.random(), math.random()), 0, 0)
+       task.wait()
+      char.HumanoidRootPart.CFrame = pos
+   end
+until not char or accel.Value == false end)
+     end
+   end)
+   
    char:WaitForChild("Humanoid").WalkSpeed = attribute.Value or 2500
    char.Humanoid.AutoJumpEnabled = false
    
@@ -131,6 +180,7 @@ end)
    char:WaitForChild("Animate"):WaitForChild("walk").WalkAnim.AnimationId = "rbxassetid://10921244891"
    char.Animate.idle.Animation1.AnimationId = "rbxassetid://10921301576"
    char.Animate.jump.JumpAnim.AnimationId = "rbxassetid://10921263860"
+   char.Animate.run.RunAnim.AnimationId = "rbxassetid://82598234841035"
    char.Animate.fall.FallAnim.AnimationId = "rbxassetid://10921262864"
    end)
    
@@ -286,15 +336,18 @@ end
    local walki = false
    Button2.MouseButton1Click:Connect(function()
     walki = not walki
+    Button2.Text = (walki == true and "Run" or "Walk")
      if walki == true then
-       attribute.Value = 30
-       char.Humanoid.WalkSpeed = 30
+       attribute.Value = 20
+       char.Humanoid.WalkSpeed = 20
        
+       char.Animate.run.RunAnim.AnimationId = "rbxassetid://10921244891"
        char.LeftHand.FireLine.Enabled = (accel.Value == false and false or true)
        char.RightHand.FireLine.Enabled = (accel.Value == false and false or true)
      else
        attribute.Value = (accel.Value == true and 25000 or 2500)
        char.Humanoid.WalkSpeed = attribute.Value
+       char.Animate.run.RunAnim.AnimationId = "rbxassetid://82598234841035"
        
        char.LeftHand.FireLine.Enabled = true
        char.RightHand.FireLine.Enabled = true
@@ -320,6 +373,7 @@ end
         
         char:FindFirstChild("RightHand").FireLine:Emit(100)
         char:FindFirstChild("LeftHand").FireLine:Emit(100)
+        char.Animate.run.RunAnim.AnimationId = "rbxassetid://82598234841035"
         
         local sound = Instance.new("Sound", char.HumanoidRootPart)
         sound.SoundId = "rbxassetid://8060079174"
@@ -412,9 +466,11 @@ end
   
   char.Humanoid.FallingDown:Connect(function()
     char.Humanoid:ChangeState("GettingUp")
-    char.HumanoidRootPart.Velocity = Vector3.zero
-    char.HumanoidRootPart.AssemblyAngularVelocity = Vector3.zero
-    char.HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+     if SAS.Value == true then
+       char.HumanoidRootPart.Velocity = Vector3.zero
+       char.HumanoidRootPart.AssemblyAngularVelocity = Vector3.zero
+       char.HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+     end
   end)
 end)
 firesignal(game.Players.LocalPlayer.CharacterAdded, game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait())
@@ -422,5 +478,153 @@ firesignal(game.Players.LocalPlayer.CharacterAdded, game.Players.LocalPlayer.Cha
   WallyWestScript.Destroying:Connect(function()
     hue:Disconnect()
     road:Destroy()
+    pcall(function() Ihe:Disconnect() end)
+  end)
+
+local ButtonGui = Instance.new("ScreenGui", game.CoreGui)
+ButtonGui.ResetOnSpawn = false
+ButtonGui.IgnoreGuiInset = true
+ButtonGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ButtonGui.DisplayOrder = -25
+
+local Frame = Instance.new("Frame", ButtonGui)
+Frame.Active = true
+Frame.Draggable = false
+Frame.BorderSizePixel = 0
+Frame.Visible = false
+Frame.Size = UDim2.new(0, 250, 0, 250)
+Frame.BackgroundTransparency = 0.1
+Frame.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+Frame.Position = UDim2.new(0.35, 0, 0.2, 0)
+
+local Title = Instance.new("TextLabel", Frame)
+Title.Size = UDim2.new(0, 150, 0, 30)
+Title.Position = UDim2.new(0, 50, 0, -5)
+Title.Text = "Wally West Script Settings"
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.BackgroundTransparency = 1
+
+local List = Instance.new("ScrollingFrame", Frame)
+List.Size = UDim2.new(0, 200, 0, 200)
+List.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+List.ScrollBarThickness = 5
+List.Position = UDim2.new(0, 23, 0, 21)
+List.BorderSizePixel = 0
+List.BackgroundTransparency = 0.1
+
+local Layout = Instance.new("UIGridLayout", List)
+Layout.SortOrder = Enum.SortOrder.LayoutOrder
+Layout.CellSize = UDim2.new(0, 170, 0, 20)
+Layout.CellPadding = UDim2.new(0, 5, 0, 5)
+
+Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+  List.CanvasSize = UDim2.new(0, 0, 0, Layout.AbsoluteContentSize.Y)
+end)
+
+ do
+local SASb = Instance.new("TextButton", List)
+SASb.Text = "Stop player after ragdoll"
+SASb.BackgroundColor3 = List.BackgroundColor3
+SASb.TextColor3 = Color3.new(1, 1, 1)
+SASb.TextScaled = true
+SASb.Position = UDim2.new(0.5, 0, 0.5, 0)
+SASb.AnchorPoint = Vector2.new(0.5, 0.5)
+SASb.TextXAlignment = Enum.TextXAlignment.Center
+SASb.Size = UDim2.new(0, 4, 0, 3)
+SASb.BorderSizePixel = 0
+
+local OnorOff = Instance.new("TextLabel", SASb)
+OnorOff.TextColor3 = Color3.new(0, 1, 0)
+OnorOff.AnchorPoint = Vector2.new(0.5, 0.5)
+OnorOff.Position = UDim2.new(1.05, 0, 0.55, 0)
+OnorOff.Text = "ON"
+OnorOff.TextStrokeTransparency = 0.35
+OnorOff.TextStrokeColor3 = Color3.new(0, 1, 0)
+OnorOff.BackgroundTransparency = 1
+OnorOff.Size = UDim2.new(0.4, 0, 0.4, 0)
+OnorOff.Active = false
+
+SASb.MouseButton1Click:Connect(function()
+  SAS.Value = not SAS.Value
+  OnorOff.Text = ((OnorOff.Text == "ON") and "OFF" or (OnorOff.Text == "OFF") and "ON")
+  OnorOff.TextColor3 = ((OnorOff.Text == "ON") and Color3.new(0, 1, 0) or (OnorOff.Text == "OFF") and Color3.new(1, 0, 0))
+  OnorOff.TextStrokeColor3 = OnorOff.TextColor3
+end)
+
+local IRb = Instance.new("TextButton", List)
+IRb.Text = "Instant race"
+IRb.BackgroundColor3 = List.BackgroundColor3
+IRb.TextColor3 = Color3.new(1, 1, 1)
+IRb.TextScaled = true
+IRb.Position = UDim2.new(0.5, 0, 0.5, 0)
+IRb.AnchorPoint = Vector2.new(0.5, 0.5)
+IRb.TextXAlignment = Enum.TextXAlignment.Center
+IRb.Size = UDim2.new(0, 4, 0, 3)
+IRb.BorderSizePixel = 0
+
+local OnorOff = Instance.new("TextLabel", IRb)
+OnorOff.TextColor3 = Color3.new(1, 0, 0)
+OnorOff.AnchorPoint = Vector2.new(0.5, 0.5)
+OnorOff.Position = UDim2.new(1.05, 0, 0.55, 0)
+OnorOff.Text = "OFF"
+OnorOff.TextStrokeTransparency = 0.35
+OnorOff.TextStrokeColor3 = Color3.new(1, 0, 0)
+OnorOff.BackgroundTransparency = 1
+OnorOff.Size = UDim2.new(0.4, 0, 0.4, 0)
+OnorOff.Active = false
+
+IRb.MouseButton1Click:Connect(function()
+  IR.Value = not IR.Value
+  OnorOff.Text = ((OnorOff.Text == "ON") and "OFF" or (OnorOff.Text == "OFF") and "ON")
+  OnorOff.TextColor3 = ((OnorOff.Text == "ON") and Color3.new(0, 1, 0) or (OnorOff.Text == "OFF") and Color3.new(1, 0, 0))
+  OnorOff.TextStrokeColor3 = OnorOff.TextColor3
+end)
+
+local SCOAb = Instance.new("TextButton", List)
+SCOAb.Text = "Shake character on acceleration"
+SCOAb.BackgroundColor3 = List.BackgroundColor3
+SCOAb.TextColor3 = Color3.new(1, 1, 1)
+SCOAb.TextScaled = false
+SCOAb.Position = UDim2.new(0.5, 0, 0.5, 0)
+SCOAb.AnchorPoint = Vector2.new(0.5, 0.5)
+SCOAb.TextXAlignment = Enum.TextXAlignment.Center
+SCOAb.Size = UDim2.new(0, 4, 0, 3)
+SCOAb.BorderSizePixel = 0
+
+local OnorOff = Instance.new("TextLabel", SCOAb)
+OnorOff.TextColor3 = Color3.new(0, 1, 0)
+OnorOff.AnchorPoint = Vector2.new(0.5, 0.5)
+OnorOff.Position = UDim2.new(1.05, 0, 0.55, 0)
+OnorOff.Text = "ON"
+OnorOff.TextStrokeTransparency = 0.35
+OnorOff.TextStrokeColor3 = Color3.new(0, 1, 0)
+OnorOff.BackgroundTransparency = 1
+OnorOff.Size = UDim2.new(0.4, 0, 0.4, 0)
+OnorOff.Active = false
+
+SCOAb.MouseButton1Click:Connect(function()
+  SCOA.Value = not SCOA.Value
+  OnorOff.Text = ((OnorOff.Text == "ON") and "OFF" or (OnorOff.Text == "OFF") and "ON")
+  OnorOff.TextColor3 = ((OnorOff.Text == "ON") and Color3.new(0, 1, 0) or (OnorOff.Text == "OFF") and Color3.new(1, 0, 0))
+  OnorOff.TextStrokeColor3 = OnorOff.TextColor3
+end)
+ end
+
+local SettingsButton = Instance.new("ImageButton", ButtonGui)
+SettingsButton.Image = "https://www.roblox.com/asset-thumbnail/image?assetId=81997978463390&width=432&height=432&format=png"
+SettingsButton.Size = UDim2.new(0.05, 0, 0.1, 0)
+SettingsButton.Draggable = true
+SettingsButton.Position = UDim2.new(0.8, 0, 0.25, 0)
+SettingsButton.BackgroundColor3 = Color3.new(0, 0, 0)
+
+SettingsButton.MouseButton1Click:Connect(function()
+  Frame.Visible = not Frame.Visible
+end)
+
+  WallyWestScript.Destroying:Connect(function()
+    hue:Disconnect()
+    road:Destroy()
+    pcall(function() Ihe:Disconnect() end)
+    ButtonGui:Destroy()
   end)
 end
