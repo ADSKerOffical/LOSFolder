@@ -18,6 +18,10 @@ local SCOA = Instance.new("BoolValue", Settings)
 SCOA.Name = "ShakeCharacterOnAcceleration"
 SCOA.Value = true
 
+local DCFIM = Instance.new("BoolValue", Settings)
+DCFIM.Name = "DisableCollisionOnFastMode"
+DCFIM.Value = true
+
 local Scren = Instance.new("ScreenGui", game.CoreGui)
 Scren.ResetOnSpawn = false
 
@@ -152,6 +156,7 @@ hue = game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
   until not char
 end)
   
+   local OrigJump, OrigFall = char:WaitForChild("Animate"):WaitForChild("jump").JumpAnim.AnimationId, char:WaitForChild("Animate"):WaitForChild("fall").FallAnim.AnimationId
    local attribute = Instance.new("NumberValue", char)
    attribute.Name = "SelectedSpeed"
    attribute.Value = 2500
@@ -162,10 +167,18 @@ end)
    
    accel:GetPropertyChangedSignal("Value"):Connect(function()
      if accel.Value == true then
+       char.Animate.jump.JumpAnim.AnimationId = "rbxassetid://120335479030239"
+       char.Animate.fall.FallAnim.AnimationId = "rbxassetid://120335479030239"
+     else
+       char.Animate.jump.JumpAnim.AnimationId = OrigJump
+       char.Animate.fall.FallAnim.AnimationId = OrigFall
+     end
+     
+     if accel.Value == true then
        task.spawn(function() repeat task.wait()
    if char.Humanoid:GetState() ~= "Running" and char.Humanoid:GetState() ~= "RunningNoPhysics" and char.Humanoid.MoveDirection.Magnitude <= 0 and SCOA.Value == true then
       local pos = char.HumanoidRootPart.CFrame
-      char.HumanoidRootPart.CFrame *= CFrame.new(math.min(math.random(), math.random()), 0, 0)
+      char.HumanoidRootPart.CFrame *= CFrame.new(math.min(math.random(), math.random()) / 4, math.min(math.random(), math.random()) / 4, math.min(math.random(), math.random()) / 4)
        task.wait()
       char.HumanoidRootPart.CFrame = pos
    end
@@ -445,6 +458,22 @@ end
         attribute.Value = 25000
         char.Humanoid.WalkSpeed = 25000
         
+        task.spawn(function()
+          repeat task.wait()
+            for _, part in next, char:GetDescendants() do
+              if part:IsA("BasePart") then
+                part.CanCollide = (DCFIM.Value == true and false or true)
+              end
+            end
+          until accel.Value == false
+          
+          for _, part in next, char:GetDescendants() do
+            if part:IsA("BasePart") then
+              part.CanCollide = true
+            end
+          end
+        end)
+        
         task.delay(10, function()
           accel.Value = false
           light.Range = 12
@@ -604,6 +633,35 @@ OnorOff.Active = false
 
 SCOAb.MouseButton1Click:Connect(function()
   SCOA.Value = not SCOA.Value
+  OnorOff.Text = ((OnorOff.Text == "ON") and "OFF" or (OnorOff.Text == "OFF") and "ON")
+  OnorOff.TextColor3 = ((OnorOff.Text == "ON") and Color3.new(0, 1, 0) or (OnorOff.Text == "OFF") and Color3.new(1, 0, 0))
+  OnorOff.TextStrokeColor3 = OnorOff.TextColor3
+end)
+
+local SCOAb = Instance.new("TextButton", List)
+SCOAb.Text = "Disable collision on acceleration"
+SCOAb.BackgroundColor3 = List.BackgroundColor3
+SCOAb.TextColor3 = Color3.new(1, 1, 1)
+SCOAb.TextScaled = false
+SCOAb.Position = UDim2.new(0.5, 0, 0.5, 0)
+SCOAb.AnchorPoint = Vector2.new(0.5, 0.5)
+SCOAb.TextXAlignment = Enum.TextXAlignment.Center
+SCOAb.Size = UDim2.new(0, 4, 0, 3)
+SCOAb.BorderSizePixel = 0
+
+local OnorOff = Instance.new("TextLabel", SCOAb)
+OnorOff.TextColor3 = Color3.new(0, 1, 0)
+OnorOff.AnchorPoint = Vector2.new(0.5, 0.5)
+OnorOff.Position = UDim2.new(1.05, 0, 0.55, 0)
+OnorOff.Text = "ON"
+OnorOff.TextStrokeTransparency = 0.35
+OnorOff.TextStrokeColor3 = Color3.new(0, 1, 0)
+OnorOff.BackgroundTransparency = 1
+OnorOff.Size = UDim2.new(0.4, 0, 0.4, 0)
+OnorOff.Active = false
+
+SCOAb.MouseButton1Click:Connect(function()
+  DCFIM.Value = not DCFIM.Value
   OnorOff.Text = ((OnorOff.Text == "ON") and "OFF" or (OnorOff.Text == "OFF") and "ON")
   OnorOff.TextColor3 = ((OnorOff.Text == "ON") and Color3.new(0, 1, 0) or (OnorOff.Text == "OFF") and Color3.new(1, 0, 0))
   OnorOff.TextStrokeColor3 = OnorOff.TextColor3
